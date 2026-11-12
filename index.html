@@ -4,10 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Xinrui Zhong</title>
-  <meta name="description" content="Xinrui Zhong works on machine learning, ML systems, and recursive self-improvement: efficient generative models, LLM serving, and benchmarks for AI agents that build AI systems." />
+  <meta name="description" content="Xinrui Zhong works on efficient model architectures, machine learning systems, and recursive self-improvement: sparse attention, LLM and diffusion serving, and benchmarks for AI agents that build ML systems." />
   <meta name="author" content="Xinrui Zhong" />
   <meta property="og:title" content="Xinrui Zhong" />
-  <meta property="og:description" content="Machine learning · ML systems · recursive self-improvement." />
+  <meta property="og:description" content="Efficient model architecture · ML systems · recursive self-improvement." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://zxr-creator.github.io/" />
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
@@ -59,15 +59,14 @@
     <section class="hero-band" aria-labelledby="name">
       <div class="hero wrap">
         <div class="hero__text">
-          <p class="status"><span class="status__dot" aria-hidden="true"></span>building agents that build AI systems</p>
+          <p class="status"><span class="status__dot" aria-hidden="true"></span>efficient models · ml systems · rsi</p>
           <h1 id="name">Xinrui Zhong</h1>
           <p class="lede">
-            I make generative models cheaper to run, and I build the tools and benchmarks that let AI
-            agents do that work themselves. The long-term goal is AI that can
-            <em>improve the systems it runs on</em>.
+            I make AI cheaper to run. I work on efficient model architectures, on the systems that serve
+            them on real GPUs, and on AI agents that can <em>build and optimize those systems themselves</em>.
           </p>
           <ul class="focus" aria-label="Research interests">
-            <li>machine learning</li>
+            <li>efficient model architecture</li>
             <li>ml systems</li>
             <li>recursive self-improvement</li>
           </ul>
@@ -143,7 +142,7 @@
             </svg>
           </div>
           <figcaption class="figcap">
-            <span>fig. 0: the optimizer is part of what it optimizes</span>
+            <span>fig. 0: models + systems, improved by agents</span>
             <span class="figcap__acc"><span id="v-cap">v1 &gt; v0</span> · the loop compounds</span>
           </figcaption>
         </figure>
@@ -154,97 +153,86 @@
     <section class="section wrap" id="research" aria-labelledby="research-h">
       <header class="section__head">
         <p class="kicker"><span class="num">01</span> research</p>
-        <h2 id="research-h">Can AI improve the systems <span class="dim">that make AI?</span></h2>
+        <h2 id="research-h">Efficient models, fast systems, <span class="dim">and AI that builds both.</span></h2>
       </header>
 
       <div class="prose">
         <p>
-          Every gain in AI capability is paid for with systems work. Someone writes the kernel that keeps
-          attention from stalling on memory, the scheduler that keeps a GPU busy, the quantizer that fits a
-          model on one card. A small number of experts still do that work by hand. Meanwhile new
-          architectures, new hardware and new workloads keep arriving, and the design space grows faster
-          than people can explore it.
+          Model capability keeps scaling, and so does the cost of running it. Long contexts make attention
+          memory-bound. Diffusion and video models need several GPUs per request. Every new model family
+          arrives with its own serving problem. I want to close the gap between what a model should cost
+          and what it actually costs in production.
         </p>
         <p>
-          Coding agents can now run real experiments, which raises the question I care about most. An
-          agent that improves the stack it runs on is also improving itself, because the agent runs on
-          that stack. The optimizer becomes part of what it optimizes. That is
-          <strong>recursive self-improvement</strong>, and I treat it as an engineering loop that can be
-          built, measured and pushed on today. I work on that loop from three sides.
+          I work on this at three levels. First, the <strong>model</strong>: architectures and attention
+          mechanisms that are efficient by design. Second, the <strong>system</strong>: conventional
+          ML-systems work that turns those savings into wall-clock speed. Third, and increasingly, the
+          <strong>engineer</strong>. A few experts still hand-tune each new stack, so I study whether coding
+          agents can do that work themselves. An agent runs on the same systems it optimizes, so every gain
+          makes the agent better too. That is <strong>recursive self-improvement</strong>.
         </p>
       </div>
 
-      <ol class="pillars">
-        <li class="pillar">
-          <p class="pillar__idx">01 · machine learning</p>
-          <h3>Compute less</h3>
-          <p>
-            Algorithms that remove redundant work from generative models. Examples are sparse attention
-            for long-context decoding and cheaper denoising for diffusion language models. The target is
-            work the model never needed to do.
-          </p>
-          <p class="pillar__refs"><a href="#p-risa">RISA</a> · <a href="#p-r2dllm">R²-dLLM</a> · <a href="#p-compressionbench">CompressionBench</a></p>
-        </li>
-        <li class="pillar">
-          <p class="pillar__idx">02 · ml systems</p>
-          <h3>Make it real on hardware</h3>
-          <p>
-            Savings on paper only count once they show up in wall-clock throughput. I build serving
-            runtimes, sequence-parallel inference and GPU schedulers that turn algorithmic sparsity into
-            speed on real clusters, from H200s down to PCIe-connected commodity cards.
-          </p>
-          <p class="pillar__refs"><a href="#p-vortex">Vortex</a> · <a href="#p-genserve">GenServe</a> · <a href="#p-sparsp">SparSP</a> · <a href="#p-qrmark">QRMark</a></p>
-        </li>
-        <li class="pillar">
-          <p class="pillar__idx">03 · self-improvement</p>
-          <h3>Close the loop</h3>
-          <p>
-            I give agents programmable building blocks and honest benchmarks, so they can do 01 and 02
-            themselves: design sparse attention, compress LLMs, build serving systems from scratch.
-            The benchmarks also need to tell us whether the agent actually succeeded.
-          </p>
-          <p class="pillar__refs"><a href="#p-serverbench">ServerBench</a> · <a href="#p-compressionbench">CompressionBench</a> · <a href="#p-vortex">Vortex</a></p>
-        </li>
-      </ol>
+      <div class="areas">
+        <div class="areas__groups" aria-hidden="true">
+          <span class="areas__group areas__group--a">the model</span>
+          <span class="areas__group areas__group--b">machine learning systems</span>
+        </div>
+        <ol class="pillars">
+          <li class="pillar">
+            <p class="pillar__idx"><span>01</span> efficient model architecture</p>
+            <h3>Compute less, by design</h3>
+            <p>
+              Model and attention designs that skip work the model never needed. That covers sparse
+              attention for long-context and block-diffusion decoding, and redundancy-aware parallel
+              decoding for diffusion language models.
+            </p>
+            <p class="pillar__refs"><a href="#p-risa">RISA</a> · <a href="#p-r2dllm">R²-dLLM</a> · <a href="#p-vortex">Vortex</a></p>
+          </li>
+          <li class="pillar">
+            <p class="pillar__idx"><span>02</span> conventional ml systems</p>
+            <h3>Make it fast on real GPUs</h3>
+            <p>
+              Classic systems work: serving engines, sequence parallelism, SLO-aware GPU scheduling and
+              efficient inference pipelines for LLMs and diffusion models. Everything is built and measured on
+              real clusters, from H200s down to PCIe-connected commodity GPUs.
+            </p>
+            <p class="pillar__refs"><a href="#p-vortex">Vortex</a> · <a href="#p-genserve">GenServe</a> · <a href="#p-sparsp">SparSP</a> · <a href="#p-qrmark">QRMark</a></p>
+          </li>
+          <li class="pillar">
+            <p class="pillar__idx"><span>03</span> recursive self-improvement</p>
+            <h3>Let agents build the system</h3>
+            <p>
+              Agents that do systems work themselves: build LLM serving engines from scratch, compress models
+              under a storage budget, write new sparse-attention algorithms. I build the programmable
+              substrates and benchmarks that make this possible and measurable.
+            </p>
+            <p class="pillar__refs"><a href="#p-serverbench">ServerBench</a> · <a href="#p-compressionbench">CompressionBench</a> · <a href="#p-vortex">Vortex</a></p>
+          </li>
+        </ol>
+      </div>
 
       <aside class="principle">
-        <p class="kicker">// a note on method</p>
+        <p class="kicker">// on measuring agents</p>
         <p>
-          A speedup an agent claims is only as trustworthy as the evaluator that measured it. My
+          A speedup an agent claims is only as trustworthy as the evaluator that measured it. My RSI
           benchmarks use frozen tasks, offline sandboxes, fixed deadlines and a <em>hidden verifier</em>
           the agent never sees, so the final number means what it says.
         </p>
       </aside>
     </section>
 
-    <!-- ─────────────────────────── news ─────────────────────────── -->
-    <section class="section wrap" id="news" aria-labelledby="news-h">
-      <header class="section__head">
-        <p class="kicker"><span class="num">02</span> log</p>
-        <h2 id="news-h">News <span class="dim">&amp; updates</span></h2>
-      </header>
-      <ol class="log">
-        <li><time datetime="2026-11">2026.11</time><p><a href="#p-serverbench">ServerBench</a> and <a href="#p-compressionbench">CompressionBench</a> are out on arXiv. Can coding agents build LLM serving systems? Can they compress LLMs?</p></li>
-        <li><time datetime="2026-09">2026.09</time><p><a href="#p-risa">RISA</a> submitted to ICLR 2027. <a href="#p-sparsp">SparSP</a> released on arXiv.</p></li>
-        <li><time datetime="2026-06">2026.06</time><p><a href="#p-vortex">Vortex</a> released on arXiv with code at <a href="https://github.com/Infini-AI-Lab/vortex_torch">Infini-AI-Lab/vortex_torch</a>. It was accepted to <b>NeurIPS 2026</b>.</p></li>
-        <li><time datetime="2026-04">2026.04</time><p><a href="#p-genserve">GenServe</a> and <a href="#p-r2dllm">R²-dLLM</a> released on arXiv.</p></li>
-        <li><time datetime="2026-02">2026.02</time><p>Joined the InfiniAI Lab at Carnegie Mellon as a research intern with Prof. Beidi Chen.</p></li>
-        <li><time datetime="2025-12">2025.12</time><p>Finished my M.S. in Computer Science at Rice University.</p></li>
-        <li><time datetime="2025-09">2025.09</time><p><a href="#p-qrmark">QRMark</a>, an efficient watermark detection system, released on arXiv.</p></li>
-      </ol>
-    </section>
-
     <!-- ─────────────────────────── papers ─────────────────────────── -->
     <section class="section wrap" id="papers" aria-labelledby="papers-h">
       <header class="section__head section__head--row">
         <div>
-          <p class="kicker"><span class="num">03</span> papers</p>
+          <p class="kicker"><span class="num">02</span> papers</p>
           <h2 id="papers-h">Publications <span class="dim">&amp; preprints</span></h2>
         </div>
         <div class="filters" role="group" aria-label="Filter papers">
           <button type="button" class="chip" data-filter="all" aria-pressed="true">all</button>
           <button type="button" class="chip" data-filter="first" aria-pressed="false">first-author</button>
-          <button type="button" class="chip" data-filter="ml" aria-pressed="false">ml</button>
+          <button type="button" class="chip" data-filter="arch" aria-pressed="false">efficient arch</button>
           <button type="button" class="chip" data-filter="sys" aria-pressed="false">mlsys</button>
           <button type="button" class="chip" data-filter="rsi" aria-pressed="false">rsi</button>
         </div>
@@ -252,7 +240,7 @@
 
       <ol class="pubs" id="pubs">
         <!-- RISA -->
-        <li class="pub" id="p-risa" data-tags="first ml sys">
+        <li class="pub" id="p-risa" data-tags="first arch sys">
           <div class="pub__body">
             <p class="pub__venue"><span class="pub__status">submitted to</span><span class="badge badge--review">ICLR 2027</span></p>
             <h3 class="pub__title">RISA: Recoverable Sparse Attention for Block-Diffusion Language Models</h3>
@@ -268,7 +256,7 @@
         </li>
 
         <!-- Vortex -->
-        <li class="pub" id="p-vortex" data-tags="sys rsi">
+        <li class="pub" id="p-vortex" data-tags="arch sys rsi">
           <div class="pub__body">
             <p class="pub__venue"><span class="badge badge--accept">NeurIPS 2026</span></p>
             <h3 class="pub__title">Vortex: Efficient and Programmable Sparse Attention Serving for AI Agents</h3>
@@ -310,7 +298,7 @@
         </li>
 
         <!-- CompressionBench -->
-        <li class="pub" id="p-compressionbench" data-tags="first ml rsi">
+        <li class="pub" id="p-compressionbench" data-tags="first rsi">
           <div class="pub__body">
             <p class="pub__venue"><span class="pub__status">submitted to</span><span class="badge badge--review">MLSys 2027</span></p>
             <h3 class="pub__title">CompressionBench: How can your coding agents compress LLMs?</h3>
@@ -348,7 +336,7 @@
         </li>
 
         <!-- R2-dLLM -->
-        <li class="pub" id="p-r2dllm" data-tags="ml">
+        <li class="pub" id="p-r2dllm" data-tags="arch">
           <div class="pub__body">
             <p class="pub__venue"><span class="pub__status">submitted to</span><span class="badge badge--review">NAACL 2027</span></p>
             <h3 class="pub__title">R²-dLLM: Accelerating Diffusion Large Language Models via Spatio-Temporal Redundancy Reduction</h3>
@@ -408,7 +396,7 @@
     <!-- ─────────────────────────── open source ─────────────────────────── -->
     <section class="section wrap" id="code" aria-labelledby="code-h">
       <header class="section__head">
-        <p class="kicker"><span class="num">04</span> open source</p>
+        <p class="kicker"><span class="num">03</span> open source</p>
         <h2 id="code-h">Open source <span class="dim">we&rsquo;re building</span></h2>
         <p class="section__sub">Benchmarks only matter if other people can run them. Star counts load live from GitHub.</p>
       </header>
@@ -482,7 +470,7 @@
     <!-- ─────────────────────────── experience ─────────────────────────── -->
     <section class="section wrap" id="experience" aria-labelledby="exp-h">
       <header class="section__head">
-        <p class="kicker"><span class="num">05</span> experience</p>
+        <p class="kicker"><span class="num">04</span> experience</p>
         <h2 id="exp-h">Research <span class="dim">experience</span></h2>
       </header>
 
@@ -528,7 +516,7 @@
     <!-- ─────────────────────────── education & service ─────────────────────────── -->
     <section class="section wrap" id="education" aria-labelledby="edu-h">
       <header class="section__head">
-        <p class="kicker"><span class="num">06</span> education &amp; service</p>
+        <p class="kicker"><span class="num">05</span> education &amp; service</p>
         <h2 id="edu-h">Education <span class="dim">&amp; service</span></h2>
       </header>
       <div class="edu">
@@ -555,11 +543,11 @@
 
     <!-- ─────────────────────────── contact ─────────────────────────── -->
     <section class="section wrap contact" id="contact" aria-labelledby="contact-h">
-      <p class="kicker"><span class="num">07</span> contact</p>
-      <h2 id="contact-h">Let's build the loop <span class="dim">together.</span></h2>
+      <p class="kicker"><span class="num">06</span> contact</p>
+      <h2 id="contact-h">Let's build fast systems <span class="dim">together.</span></h2>
       <p class="contact__lede">
-        I'm happy to talk about efficient ML, serving systems, or how to measure whether agents are
-        really improving AI.
+        I'm happy to talk about efficient model architectures, ML systems, or how to measure whether
+        agents are really improving AI.
       </p>
       <ul class="contact__links">
         <li><a class="js-mail" data-show data-u="xinruizhong.cd" data-d="gmail.com" href="#contact"><span class="contact__k">email</span><span class="contact__v">xinruizhong.cd [at] gmail [dot] com</span></a></li>

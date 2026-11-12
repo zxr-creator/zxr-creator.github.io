@@ -46,8 +46,6 @@
       entries.forEach(function (en) {
         if (!en.isIntersecting) return;
         var id = en.target.id;
-        // News sits between research and papers; keep "research" lit there.
-        if (id === "news") id = "research";
         if (id === "education") id = "experience";
         links.forEach(function (a) { a.classList.remove("is-active"); });
         if (byId[id]) byId[id].classList.add("is-active");
@@ -372,7 +370,7 @@
 
   /* ───────── gentle reveal ───────── */
   if (!reduceMotion && "IntersectionObserver" in window) {
-    var targets = document.querySelectorAll(".pillar, .pub, .repo, .tl, .log li, .edu__list li, .service");
+    var targets = document.querySelectorAll(".pillar, .pub, .repo, .tl, .edu__list li, .service");
     var io = new IntersectionObserver(function (es) {
       es.forEach(function (e) {
         if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
