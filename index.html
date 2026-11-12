@@ -45,6 +45,7 @@
         <a href="#papers">papers</a>
         <a href="#code">code</a>
         <a href="#experience">experience</a>
+        <a href="#blog">blog</a>
         <a href="#contact">contact</a>
       </nav>
       <button class="theme" id="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle theme (t)">
@@ -291,7 +292,8 @@
             </p>
             <p class="pub__links">
               <a href="https://arxiv.org/abs/2611.06841">arXiv ↗</a>
-              <span class="soon">code · open-sourcing soon</span>
+              <a href="https://github.com/Infini-AI-Lab/Server-Bench">code ↗</a>
+              <a href="https://infini-ai-lab.github.io/Server-Bench/">blog ↗</a>
             </p>
           </div>
           <figure class="plate" data-glyph="serverbench" data-cap="prefill + decode, batched by the agent's own scheduler"></figure>
@@ -311,7 +313,8 @@
             </p>
             <p class="pub__links">
               <a href="https://arxiv.org/abs/2611.06858">arXiv ↗</a>
-              <span class="soon">code · open-sourcing soon</span>
+              <a href="https://github.com/Infini-AI-Lab/Compression-Bench">code ↗</a>
+              <a href="https://infini-ai-lab.github.io/Compression-Bench/">blog ↗</a>
             </p>
           </div>
           <figure class="plate" data-glyph="compressionbench" data-cap="mixed-bit, pruned, outliers kept"></figure>
@@ -415,38 +418,41 @@
           </p>
           <ul class="tags"><li>python</li><li>cuda</li><li>sglang</li><li>sparse attention</li></ul>
           <pre class="repo__cmd"><span class="prompt">$</span> gh repo clone Infini-AI-Lab/vortex_torch -- --recursive</pre>
+          <p class="repo__links"><a href="https://github.com/Infini-AI-Lab/vortex_torch">repo ↗</a><a href="https://infini-ai-lab.github.io/vortex_torch/">website ↗</a><a href="https://arxiv.org/abs/2606.06453">paper ↗</a></p>
           <p class="repo__meta" data-pushed></p>
         </article>
 
-        <article class="repo">
+        <article class="repo" data-repo="Infini-AI-Lab/Server-Bench">
           <header class="repo__head">
-            <h3><a href="https://arxiv.org/abs/2611.06841">ServerBench</a></h3>
-            <span class="repo__soon">open-sourcing soon</span>
+            <h3><a href="https://github.com/Infini-AI-Lab/Server-Bench">ServerBench</a></h3>
+            <span class="repo__stars" title="GitHub stars">★ <span data-stars>·</span></span>
           </header>
-          <p class="repo__path">serverbench · lead developer</p>
+          <p class="repo__path">Infini-AI-Lab / Server-Bench · lead developer</p>
           <p class="repo__desc">
             A harness where agents evolve a minimal server into a specialized LLM serving system. Tasks are
             frozen, containers are offline, Harbor composes the environment, and real agentic sessions are
             replayed against what the agent built. SGLang is measured as a reference and never copied in.
           </p>
           <ul class="tags"><li>llm serving</li><li>agents</li><li>harbor</li><li>benchmark</li></ul>
-          <pre class="repo__cmd"><span class="prompt">$</span> evolve-task.sh T001 --hours 8 --stop timebox</pre>
+          <pre class="repo__cmd"><span class="prompt">$</span> gh repo clone Infini-AI-Lab/Server-Bench</pre>
+          <p class="repo__links"><a href="https://github.com/Infini-AI-Lab/Server-Bench">repo ↗</a><a href="https://infini-ai-lab.github.io/Server-Bench/">blog ↗</a><a href="https://arxiv.org/abs/2611.06841">paper ↗</a></p>
           <p class="repo__meta" data-pushed></p>
         </article>
 
-        <article class="repo">
+        <article class="repo" data-repo="Infini-AI-Lab/Compression-Bench">
           <header class="repo__head">
-            <h3><a href="https://arxiv.org/abs/2611.06858">CompressionBench</a></h3>
-            <span class="repo__soon">open-sourcing soon</span>
+            <h3><a href="https://github.com/Infini-AI-Lab/Compression-Bench">CompressionBench</a></h3>
+            <span class="repo__stars" title="GitHub stars">★ <span data-stars>·</span></span>
           </header>
-          <p class="repo__path">compressionbench · lead developer</p>
+          <p class="repo__path">Infini-AI-Lab / Compression-Bench · lead developer</p>
           <p class="repo__desc">
             An autonomous model-compression benchmark on Qwen and Gemma checkpoints, with storage budgets from
             8 to 32 GiB. Agents compress inside an offline container with a public checker. A hidden verifier
             judges the submission once, after the wall clock runs out.
           </p>
           <ul class="tags"><li>quantization</li><li>pruning</li><li>agents</li><li>benchmark</li></ul>
-          <pre class="repo__cmd"><span class="prompt">$</span> evolve-task.sh compress-qwen3.8-27b-32g --hours 8</pre>
+          <pre class="repo__cmd"><span class="prompt">$</span> gh repo clone Infini-AI-Lab/Compression-Bench</pre>
+          <p class="repo__links"><a href="https://github.com/Infini-AI-Lab/Compression-Bench">repo ↗</a><a href="https://infini-ai-lab.github.io/Compression-Bench/">blog ↗</a><a href="https://arxiv.org/abs/2611.06858">paper ↗</a></p>
           <p class="repo__meta" data-pushed></p>
         </article>
 
@@ -462,6 +468,7 @@
           </p>
           <ul class="tags"><li>time series</li><li>llm</li><li>benchmark</li></ul>
           <pre class="repo__cmd"><span class="prompt">$</span> gh repo clone datamllab/ltsm</pre>
+          <p class="repo__links"><a href="https://github.com/datamllab/ltsm">repo ↗</a></p>
           <p class="repo__meta" data-pushed></p>
         </article>
       </div>
@@ -541,9 +548,22 @@
       </div>
     </section>
 
+    <!-- ─────────────────────────── blog ─────────────────────────── -->
+    <section class="section wrap" id="blog" aria-labelledby="blog-h">
+      <header class="section__head">
+        <p class="kicker"><span class="num">06</span> blog</p>
+        <h2 id="blog-h">Blog <span class="dim">&amp; notes</span></h2>
+      </header>
+      <div class="empty" role="note">
+        <p><span class="prompt">$</span> ls ~/blog</p>
+        <p class="empty__out">total 0</p>
+        <p class="empty__out"># no posts yet. first one coming soon.</p>
+      </div>
+    </section>
+
     <!-- ─────────────────────────── contact ─────────────────────────── -->
     <section class="section wrap contact" id="contact" aria-labelledby="contact-h">
-      <p class="kicker"><span class="num">06</span> contact</p>
+      <p class="kicker"><span class="num">07</span> contact</p>
       <h2 id="contact-h">Let's build fast systems <span class="dim">together.</span></h2>
       <p class="contact__lede">
         I'm happy to talk about efficient model architectures, ML systems, or how to measure whether
