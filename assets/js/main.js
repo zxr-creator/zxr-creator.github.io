@@ -60,6 +60,8 @@
   document.querySelectorAll(".js-mail").forEach(function (a) {
     var addr = a.getAttribute("data-u") + "@" + a.getAttribute("data-d");
     a.setAttribute("href", "mailto:" + addr);
+    var v = a.hasAttribute("data-show") && a.querySelector(".contact__v");
+    if (v) v.textContent = addr;
   });
 
   /* ───────── year ───────── */
