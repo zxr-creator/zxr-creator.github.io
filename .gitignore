@@ -1,3 +1,5 @@
-# Never publish the CV source (contains private contact details)
+# PDFs stay private by default: older CV versions contain phone/address.
 *.pdf
+# The public CV (email only, built from phd_application/cv/Xinrui_Zhong_CV.tex) is the one exception.
+!/Xinrui_Zhong_CV.pdf
 .DS_Store

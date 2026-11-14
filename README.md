@@ -9,6 +9,7 @@ index.html             all content (edit text here)
 assets/css/style.css   design tokens at the top (colors, fonts), light + dark
 assets/js/main.js      theme toggle, paper filters, live GitHub stars, figure "plates"
 assets/favicon.svg
+Xinrui_Zhong_CV.pdf    public CV (email only); rebuild from the private CV source, never add phone/address
 ```
 
 ## Common edits
