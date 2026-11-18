@@ -256,7 +256,10 @@
               Block diffusion LMs re-read a growing KV cache at every denoising step. RISA sorts newly
               generated history into exact priority and recovery tiers, and lets seed queries build a
               single bounded read plan that every step of the block reuses. On DreamReasoner-8B this gives
-              2.32× faster sparse attention at a 32K prefix, rising to 5.53× at 128K.
+              2.67× faster attention than dense at 32K, rising to 5.53× at 128K.
+            </p>
+            <p class="pub__links">
+              <a href="https://arxiv.org/abs/2611.22191">arXiv ↗</a>
             </p>
           </div>
           <figure class="plate" data-glyph="risa" data-cap="one read plan, reused across denoising steps"></figure>
