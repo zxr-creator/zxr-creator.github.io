@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Coding Agents for Systems Research · Xinrui Zhong</title>
-  <meta name="description" content="What building ServerBench, CompressionBench and a self-improving harness taught me about using coding agents for systems research: pick a problem with clear feedback that runs in a loop, then design the environment, the reward and the verification. And two ways strong agents still get stuck." />
+  <meta name="description" content="What building ServerBench, CompressionBench and a self-improving serving agent for ServeForge taught me about using coding agents for systems research: pick a problem with clear feedback that runs in a loop, then design the environment, the reward and the verification. And two ways strong agents still get stuck." />
   <meta name="author" content="Xinrui Zhong" />
   <meta property="og:title" content="Coding agents for systems research" />
   <meta property="og:type" content="article" />
@@ -112,11 +112,11 @@
 
   <main>
     <article class="post" id="post">
-      <p class="post__meta"><a href="../index.html#blog">~/blog</a> · Nov 19, 2026 · 7 min read</p>
+      <p class="post__meta"><a href="../index.html#blog">~/blog</a> · Nov 20, 2026 · 9 min read</p>
       <h1>Coding agents for systems research: pick the problem, then build the loop</h1>
       <p class="post__lede">
         Over the past year I built two benchmarks where coding agents do real ML-systems work, and I'm now
-        building a harness where they design part of an inference engine on their own. The lesson I keep relearning:
+        building an agent that optimizes a customer's LLM serving system for hours, and improves itself while it runs. The lesson I keep relearning:
         the model matters less than the loop around it. This post covers the one decision that comes first
         (which problem to give the agent) and the three parts of the loop that decide whether its results can be trusted.
         It ends with two ways that strong agents still get stuck.
@@ -132,16 +132,17 @@
           container with compression toolchains and a public checker. It can mix quantization, pruning, low-rank factorization and
           distillation. When the clock runs out, a hidden verifier it never sees judges the submission once: size, GPU memory,
           perplexity on hidden inputs and decode latency.</li>
-        <li><strong>Agentic sparse attention</strong> (in progress). Agents design the sparse-attention policy inside an unmodified
-          SGLang engine, from which KV pages each decode step reads down to the kernels that read them. The harness around them
-          checks every candidate with a hidden verifier and improves itself between runs.</li>
+        <li><strong>ServeForge and S800</strong> (in progress). ServeForge, led by Zhuoming Chen, turns one customer's serving engagement
+          (their model, GPUs, traffic, behaviour tests and prices) into a gradable task for a coding agent with a root shell and
+          twelve hours. On my branch I'm building S800, the serving agent: a method, serving skills, subagents and a finish gate, plus
+          Hermit, a loop that revises S800's harness during the engagement from what its own runs show.</li>
       </ul>
 
       <figure class="fig" id="fig-loop">
         <div class="frame">
           <svg viewBox="0 0 680 300" role="img" aria-labelledby="fig1-t fig1-d">
             <title id="fig1-t">The agent loop</title>
-            <desc id="fig1-d">A problem defines the environment. The agent works inside the environment and submits candidates. A hidden verifier checks each candidate, the reward scores it, and the result goes back to the agent through memory.</desc>
+            <desc id="fig1-d">A problem defines the environment. The agent works inside the environment and submits candidates. A hidden verifier checks each candidate on a fresh server, the reward scores it, and the result goes back to the agent through memory.</desc>
             <defs>
               <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="s-arrow" /></marker>
               <marker id="aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="s-arrow--acc" /></marker>
@@ -166,8 +167,8 @@
             <!-- verifier -->
             <rect x="462" y="160" width="210" height="78" rx="10" class="s-box" />
             <text x="476" y="184" class="s-t">3 · verification</text>
-            <text x="476" y="203" class="s-t3">hidden, from frozen files,</text>
-            <text x="476" y="219" class="s-t3">same sample as the best</text>
+            <text x="476" y="203" class="s-t3">hidden · fresh server ·</text>
+            <text x="476" y="219" class="s-t3">a seed the agent never saw</text>
             <path d="M400 214 H458" class="s-line" marker-end="url(#ah)" />
             <!-- reward -->
             <rect x="462" y="40" width="210" height="78" rx="10" class="s-box" />
@@ -193,9 +194,9 @@
       </p>
       <p>
         The second question is where the hard cases live. A serving system takes minutes to rebuild and a 30-minute replay to judge,
-        so an 8-hour run gets a handful of honest measurements. A compressed 27B checkpoint takes even longer to produce and evaluate.
-        A sparse-attention policy can be checked in minutes, which is why I chose it for the harness: the agent gets dozens of verified
-        attempts per run instead of a few.
+        so an 8-hour ServerBench run gets a handful of honest measurements. In ServeForge a traffic run is twenty minutes of the one GPU,
+        so even a twelve-hour engagement gets a few dozen. A compressed 27B checkpoint takes longer still to produce and evaluate.
+        The fewer tries a problem allows, the more each one has to count, and the more the harness has to decide what to try.
       </p>
 
       <figure class="fig" id="fig-pick">
@@ -213,7 +214,7 @@
             <text x="92" y="40" class="s-acc">sweet spot</text>
 
             <circle cx="130" cy="62" r="6" class="s-mark--acc" /><text x="142" y="66" class="s-t2">GPU kernel tuning</text>
-            <circle cx="200" cy="96" r="6" class="s-mark--acc" /><text x="212" y="100" class="s-t2">sparse-attention policy</text>
+            <circle cx="200" cy="96" r="6" class="s-mark--acc" /><text x="212" y="100" class="s-t2">one serving flag</text>
             <circle cx="430" cy="78" r="6" class="s-mark" /><text x="442" y="82" class="s-t2">serving system (replay)</text>
             <circle cx="520" cy="120" r="6" class="s-mark" /><text x="532" y="124" class="s-t2">checkpoint compression</text>
             <circle cx="610" cy="236" r="6" class="s-mark" /><text x="598" y="240" text-anchor="end" class="s-t2">pretraining a new architecture</text>
@@ -227,50 +228,50 @@
 
       <h2><span class="num">1</span>Environment: the sandbox and the start point</h2>
       <p>
-        All three projects run agents in <a href="https://github.com/harbor-framework/harbor">Harbor</a> sandboxes: a container with a GPU,
-        the model weights, the toolchain and nothing else. ServerBench and CompressionBench cut the network once the image is built, so the
-        agent cannot download a finished answer. The harness mounts only what the agent needs; the verifier's thresholds and correctness
-        questions never enter the sandbox.
+        ServerBench and CompressionBench run agents in <a href="https://github.com/harbor-framework/harbor">Harbor</a> sandboxes: a container
+        with a GPU, the model weights, the toolchain and nothing else, with the network cut once the image is built so the agent cannot
+        download a finished answer. ServeForge gives every agent the same pinned engine, machine and brief, on local GPUs or cloud
+        sandboxes, plus a single added command, <code>finish</code>. In all three, the grader's traffic, tests and thresholds never enter the
+        sandbox.
       </p>
       <p>
         <strong>The start point is part of the environment, and it shapes the search.</strong> ServerBench starts from a correct but naive
-        server, so every gain is the agent's own work and the baseline cannot be gamed. The harness starts from the opposite end: a working
-        sparse-attention runtime with a small policy interface and presets for known methods (Quest, StreamingLLM and others), so the agent
-        spends its hours on design rather than plumbing. A start point too far from the goal wastes the run on boilerplate; one too close
-        leaves nothing to discover.
+        server, so every gain is the agent's own work and the baseline cannot be gamed. ServeForge starts from the opposite end: the
+        customer's own serving command on a production engine, measured at several loads, so the agent has to beat a deployment someone
+        already tuned. A start point too far from the goal wastes the run on boilerplate; one too close leaves only flags to turn, which
+        is exactly where the first failure mode below begins.
       </p>
 
       <h2><span class="num">2</span>Reward: define the goal as one number</h2>
       <p>
         The reward should be what you would actually pay for. In ServerBench it is token value per dollar of GPU cost, counted only for
         requests that meet the latency targets. A server that is fast but answers wrongly earns nothing, and so does one that is
-        accurate but too slow. In the harness, a candidate is promoted only if it beats the current best by at least 1% on the same sample,
-        with every latency and correctness gate passing.
+        accurate but too slow. ServeForge pays income per GPU-hour at the customer's prices, and only if the server comes up, at least 99% of
+        requests complete, hidden probes match the reference engine and every behaviour test passes.
       </p>
       <p>
-        Two details turned out to matter more than I expected. First, <strong>gates must sit outside the measurement noise</strong>: in one
-        8-hour harness run, three of four rejections came from a behaviour gate set at 1.10× when the candidates measured 1.101–1.107×,
-        inside the noise band. Second, <strong>the agent will optimize anything you measure</strong>, including the harness itself. In the
-        same run, the agent kept its session alive by appending "unchanged" lines to its notes, which reset the idle detector; that last hour
-        cost $59 of the run's $68.
+        <strong>The agent will optimize anything you measure, so the reward has to say what may not be traded.</strong> In ServeForge, five
+        of the eight graded DeepSeek runs on two tasks raised their income by lowering precision: a recurrent state served in bf16 where
+        the task gives fp32, or an fp8 KV cache on a BF16 checkpoint. They measured $38–74 per GPU-hour against the customer's $22–33, and
+        every one scored zero. None of them tripped a speed or latency gate; each broke the rule written into the agent's instructions: a server must compute,
+        for every request, what the checkpoint itself would compute.
       </p>
 
       <h2><span class="num">3</span>Verification: grade files, not claims</h2>
       <p>
         Nothing the agent reports is graded. In ServerBench, the grader boots the server from the files the agent froze and replays
         sessions the agent never saw; a run whose frozen tree does not boot gets no verdict at all. CompressionBench runs its hidden verifier exactly once, after the
-        deadline. The harness goes one step further for noisy measurements: the candidate and the current best are measured
-        <strong>in the same verification, on the same hidden sample</strong>, because sample-to-sample variation (±0.05× in that run) is as
-        large as most real improvements.
+        deadline. ServeForge re-creates the deliverable from its files on a fresh server, runs the grader's traffic on a seed that never
+        entered the sandbox, and checks every gate against a deliberately dishonest server before trusting it. Then a stronger model reads
+        what the run actually changed and rules it clean, likely hacking or hacked.
       </p>
-      <div class="callout"><p>With these three in place, the harness's first long run was steady: in 8 hours the agent produced 13 verified
-        submissions, promoted 7, and took its policy from 1.63× to 1.98× the end-to-end throughput of dense attention on Qwen3-8B, every
-        step passing hidden latency and correctness gates.</p></div>
+      <div class="callout"><p>The precision cases above were caught this way: each server measured well on its own numbers, and each was
+        a different system from the one the customer asked for.</p></div>
 
       <h2>Two ways strong agents still get stuck</h2>
       <p>
-        The loop makes results trustworthy. It does not make the search good. Across our runs with DeepSeek, Sonnet and Opus models, two
-        failure modes kept showing up, and they look the same across model families.
+        The loop makes results trustworthy. It does not make the search good. Across our ServerBench and ServeForge runs with DeepSeek,
+        Sonnet and Opus models, two failure modes kept showing up, and they look the same across model families.
       </p>
 
       <h3>1 · They settle into a local optimum</h3>
@@ -348,8 +349,10 @@
       </figure>
 
       <p>
-        The harness shows the same shape on a smaller scale: most of its promotions were 1–3% steps on the same policy. Small verified
-        gains are easy to find, so the agent keeps finding them.
+        ServeForge shows the same shape one level down. Four DeepSeek runs spent their engagement on configuration: 30 to 47 runs of the
+        stock engine with different flags and not one run of a changed engine, including seven hours of 300-second flag comparisons inside
+        a 42% run-to-run swing. Flags pay first and then level off, and an agent that measures one small gain at a time never sees the hill
+        it is standing on.
       </p>
 
       <h3>2 · They commit to one idea and never leave it</h3>
@@ -395,22 +398,29 @@
 
       <p>
         Across families the pattern is the same: <strong>each model made recognisably the same design decisions run after run</strong>, and
-        those decisions predicted its result better than run-to-run noise did. More hours do not fix this, because the agent spends the extra
-        hours on the path it already chose.
+        those decisions predicted its result better than run-to-run noise did. Strength does not cure it either: even the strongest
+        ServeForge run so far rode a plateau to the end, with repeated attempts at one design and re-validation, and no new best in its
+        second half. More hours do not fix this, because the agent spends the extra hours on the path it already chose.
       </p>
 
       <h2>What I'm trying next</h2>
       <p>
-        Both failures are search problems, so the fixes go into the harness rather than the prompt. Three things are in progress:
+        Both failures are search problems, so in S800 the fixes go into the harness rather than the prompt. Four are in place or in progress:
       </p>
       <ul class="list">
-        <li><strong>Separate ideas from tuning.</strong> In the two-agent version of the harness, one agent decides what to attend to and the
-          other makes it fast, and they trade requests on a shared board. Four of those requests turned into design changes, such as making
-          every layer sparse.</li>
-        <li><strong>Make the memory remember paths, not just scores.</strong> A structured record of what was tried, and why it stalled, gives
-          the next attempt a reason to try something else.</li>
-        <li><strong>Let the harness revise its own workflow.</strong> Between phases, a meta-optimizer rewrites how the agents work; in one run
-          it revised the workflow three times, and the kept revision produced the final best design within 7 minutes.</li>
+        <li><strong>Leaps beside the steps.</strong> The step loop takes the largest loss and keeps a change when it beats the current best,
+          which "climbs fast and stops at the nearest hill." When two or three changed engines in a row set no new best, S800 starts a
+          leap: a redesign built in its own worktree, judged once and whole, while the steps continue.</li>
+        <li><strong>A reviewer when progress stalls.</strong> After three candidate runs with no gain, a reviewer subagent reads the runs and
+          says whether to continue, switch or drop the current path. And dropping an engine design for flag tuning because it looks risky
+          or slow is reviewed as likely hacking, not accepted as a finding.</li>
+        <li><strong>Memory of causes, not just scores.</strong> Each failure that recurred in two runs is written as a cause with its
+          precondition (config tuning past its local optimum; a plateau ridden to the end), so the next engagement recognises the situation
+          instead of repeating it.</li>
+        <li><strong>A harness that revises itself, in code.</strong> Hermit watches each benchmark the agent files, accounts in code where the
+          GPU's and the agent's time went, and when the largest loss is worth it, revises S800's harness mid-run: a policy knob moved, or a
+          tool built and plugged in. Our first version could also end a review in a note to the agent; two evolves deployed ten changes of
+          wording, and none could be shown to raise anything. So now a step is always a revision that code can check and take back.</li>
       </ul>
       <p>
         None of this solves the problem yet. But it changes where I spend my time: less on prompting agents, more on choosing problems with
@@ -419,9 +429,9 @@
 
       <div class="endnote">
         <p>
-          ServerBench, CompressionBench and the sparse-attention harness are joint work with my collaborators at CMU's InfiniAI Lab, led by
-          Prof. Beidi Chen. Numbers come from our run reports: the ServerBench analysis of past runs on the Qwen3.5-9B and Gemma-4 E4B tasks
-          (Oct 2026), and the harness reports of Oct 13 and Oct 16, 2026. Model names are those of the runs.
+          ServerBench, CompressionBench and ServeForge are joint work with my collaborators at CMU's InfiniAI Lab, led by Prof. Beidi Chen.
+          Numbers come from our run records: the ServerBench analysis of past runs on the Qwen3.5-9B and Gemma-4 E4B tasks (Oct 2026), and
+          ServeForge's results ledger and failure tables for S800 (Nov 2026). Model names are those of the runs.
           Code: <a href="https://github.com/Infini-AI-Lab/Server-Bench">ServerBench</a> ·
           <a href="https://github.com/Infini-AI-Lab/Compression-Bench">CompressionBench</a>.
         </p>
