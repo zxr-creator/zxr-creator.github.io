@@ -583,6 +583,8 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 }
 .empty .prompt { color: var(--green); margin-right: 8px; user-select: none; }
 .empty__out { color: #8f8f8f; }
+.empty a { color: var(--code-ink); text-decoration-color: #5c5c5c; }
+.empty a:hover { color: #8fa6ff; text-decoration-color: currentColor; }
 .empty__out:last-child::after {
   content: ""; display: inline-block; width: 7px; height: 14px; margin-left: 6px; vertical-align: -2px;
   background: var(--code-ink); animation: blink 1.1s steps(1) infinite;
