@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Coding Agents for Systems Research · Xinrui Zhong</title>
+  <meta name="description" content="What building ServerBench, CompressionBench and a self-improving harness taught me about using coding agents for systems research: pick a problem with clear feedback that runs in a loop, then design the environment, the reward and the verification. And two ways strong agents still get stuck." />
+  <meta name="author" content="Xinrui Zhong" />
+  <meta property="og:title" content="Coding agents for systems research" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://zxr-creator.github.io/blog/coding-agents-for-systems-research.html" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+  <link rel="canonical" href="https://zxr-creator.github.io/blog/coding-agents-for-systems-research.html" />
+  <script>
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem("theme"); } catch (e) {}
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root { --chart-muted: #737373; }
+    @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --chart-muted: #8a8a8a; } }
+    :root[data-theme="dark"] { --chart-muted: #8a8a8a; }
+
+    .post { max-width: 720px; margin: 0 auto; padding: 72px var(--gutter) 40px; }
+    .post__meta { font-family: var(--mono); font-size: 13px; color: var(--ink-3); margin-bottom: 18px; }
+    .post__meta a { color: var(--ink-3); text-decoration: none; }
+    .post__meta a:hover { color: var(--accent); }
+    .post h1 { font-size: clamp(32px, 5vw, 46px); letter-spacing: -0.04em; margin-bottom: 18px; }
+    .post__lede { font-size: 19px; line-height: 1.6; color: var(--ink-2); margin-bottom: 40px; }
+    .post h2 { font-size: 26px; margin: 56px 0 16px; }
+    .post h3 { font-size: 18px; margin: 32px 0 10px; letter-spacing: -0.02em; }
+    .post p { margin: 0 0 18px; color: var(--ink-2); }
+    .post p strong, .post li strong { color: var(--ink); }
+    .post ul.list { margin: 0 0 18px; padding-left: 0; }
+    .post ul.list li { position: relative; padding-left: 20px; margin-bottom: 8px; color: var(--ink-2); }
+    .post ul.list li::before { content: "—"; position: absolute; left: 0; color: var(--dim); }
+    .post code { font-family: var(--mono); font-size: 0.88em; background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+    .post .num { font-family: var(--mono); color: var(--accent); margin-right: 8px; }
+
+    figure.fig { margin: 32px 0 36px; }
+    figure.fig .frame { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 18px; overflow-x: auto; }
+    figure.fig svg { display: block; width: 100%; height: auto; min-width: 520px; }
+    figure.fig figcaption { font-size: 14px; line-height: 1.55; color: var(--ink-3); margin-top: 10px; }
+    figure.fig figcaption b { color: var(--ink-2); font-weight: 600; }
+
+    /* svg tokens */
+    .s-box { fill: var(--surface-2); stroke: var(--line-2); stroke-width: 1; }
+    .s-box--acc { fill: var(--accent-soft); stroke: var(--accent); }
+    .s-t { fill: var(--ink); font: 600 13px var(--sans); }
+    .s-t2 { fill: var(--ink-2); font: 400 12px var(--sans); }
+    .s-t3 { fill: var(--ink-3); font: 400 11px var(--mono); }
+    .s-acc { fill: var(--accent); font: 600 12px var(--sans); }
+    .s-line { stroke: var(--ink-3); stroke-width: 1.5; fill: none; }
+    .s-line--acc { stroke: var(--accent); }
+    .s-dash { stroke-dasharray: 4 4; }
+    .s-grid { stroke: var(--grid); stroke-width: 1; }
+    .s-axis { stroke: var(--line-2); stroke-width: 1; }
+    .s-arrow { fill: var(--ink-3); }
+    .s-arrow--acc { fill: var(--accent); }
+    .s-mark { fill: var(--chart-muted); }
+    .s-mark--acc { fill: var(--accent); }
+    .s-ink { stroke: var(--ink); stroke-width: 1.5; }
+    .s-hit { fill: transparent; cursor: default; }
+    .s-hit:hover + .s-hl, .s-row:hover .s-hl { opacity: 1; }
+    .s-hl { fill: var(--accent-soft); opacity: 0; transition: opacity .12s; }
+
+    .tip { position: fixed; pointer-events: none; z-index: 50; background: var(--ink); color: var(--bg); font: 12px/1.45 var(--sans); padding: 6px 9px; border-radius: 6px; max-width: 260px; opacity: 0; transition: opacity .1s; }
+    .tip.on { opacity: 1; }
+
+    details.data { margin-top: 10px; font-size: 13px; color: var(--ink-3); }
+    details.data summary { cursor: pointer; font-family: var(--mono); }
+    details.data table { border-collapse: collapse; margin-top: 8px; width: 100%; }
+    details.data th, details.data td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); color: var(--ink-2); }
+    details.data th { color: var(--ink); font-weight: 600; }
+
+    .callout { border-left: 2px solid var(--accent); padding: 4px 0 4px 16px; margin: 24px 0; }
+    .callout p { margin: 0; color: var(--ink); }
+    .endnote { font-size: 14px; color: var(--ink-3); border-top: 1px solid var(--line); margin-top: 48px; padding-top: 18px; }
+    .endnote p { color: var(--ink-3); }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#post">Skip to content</a>
+  <header class="nav" id="top">
+    <div class="wrap nav__inner">
+      <a class="brand" href="../index.html" aria-label="Home">
+        <svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10L22 12l-5 8.5H7L2 12z" /></svg>
+        <span>xinrui<span class="brand__dot">.</span>zhong</span>
+      </a>
+      <nav class="nav__links" aria-label="Sections">
+        <a href="../index.html#research">research</a>
+        <a href="../index.html#papers">papers</a>
+        <a href="../index.html#code">code</a>
+        <a href="../index.html#blog" class="is-active">blog</a>
+        <a href="../index.html#contact">contact</a>
+        <a href="../Xinrui_Zhong_CV.pdf">cv</a>
+      </nav>
+      <button class="theme" id="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle theme (t)">
+        <svg class="theme__sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+        <svg class="theme__moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" /></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <article class="post" id="post">
+      <p class="post__meta"><a href="../index.html#blog">~/blog</a> · Nov 19, 2026 · 7 min read</p>
+      <h1>Coding agents for systems research: pick the problem, then build the loop</h1>
+      <p class="post__lede">
+        Over the past year I built two benchmarks where coding agents do real ML-systems work, and I'm now
+        building a harness where they design part of an inference engine on their own. The lesson I keep relearning:
+        the model matters less than the loop around it. This post covers the one decision that comes first
+        (which problem to give the agent) and the three parts of the loop that decide whether its results can be trusted.
+        It ends with two ways that strong agents still get stuck.
+      </p>
+
+      <h2>The three projects</h2>
+      <ul class="list">
+        <li><strong>ServerBench.</strong> A coding agent gets a firewalled GPU container with model weights and a naive server
+          that handles one request at a time, and has hours to turn it into a specialized LLM serving system.
+          We grade by replaying stateful sessions against the server it leaves behind, with a hidden correctness check.
+          Across 11 agent models, the best agent-built system reached 4.87× the vLLM reference on cost efficiency.</li>
+        <li><strong>CompressionBench.</strong> The agent gets a pinned BF16 checkpoint, a storage budget of 8–32 GiB, an offline
+          container with compression toolchains and a public checker. It can mix quantization, pruning, low-rank factorization and
+          distillation. When the clock runs out, a hidden verifier it never sees judges the submission once: size, GPU memory,
+          perplexity on hidden inputs and decode latency.</li>
+        <li><strong>Agentic sparse attention</strong> (in progress). Agents design the sparse-attention policy inside an unmodified
+          SGLang engine, from which KV pages each decode step reads down to the kernels that read them. The harness around them
+          checks every candidate with a hidden verifier and improves itself between runs.</li>
+      </ul>
+
+      <figure class="fig" id="fig-loop">
+        <div class="frame">
+          <svg viewBox="0 0 680 300" role="img" aria-labelledby="fig1-t fig1-d">
+            <title id="fig1-t">The agent loop</title>
+            <desc id="fig1-d">A problem defines the environment. The agent works inside the environment and submits candidates. A hidden verifier checks each candidate, the reward scores it, and the result goes back to the agent through memory.</desc>
+            <defs>
+              <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="s-arrow" /></marker>
+              <marker id="aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="s-arrow--acc" /></marker>
+            </defs>
+            <!-- problem -->
+            <rect x="12" y="110" width="128" height="80" rx="10" class="s-box s-box--acc" />
+            <text x="76" y="140" text-anchor="middle" class="s-acc">0 · the problem</text>
+            <text x="76" y="160" text-anchor="middle" class="s-t2">clear feedback,</text>
+            <text x="76" y="176" text-anchor="middle" class="s-t2">runs in a loop</text>
+            <path d="M140 150 H178" class="s-line s-line--acc" marker-end="url(#aha)" />
+            <!-- environment -->
+            <rect x="182" y="28" width="250" height="244" rx="12" class="s-box" />
+            <text x="198" y="52" class="s-t">1 · environment</text>
+            <text x="198" y="70" class="s-t3">sandbox · GPU · start point</text>
+            <rect x="214" y="104" width="186" height="52" rx="8" class="s-box s-box--acc" />
+            <text x="307" y="126" text-anchor="middle" class="s-t">coding agent</text>
+            <text x="307" y="143" text-anchor="middle" class="s-t3">root shell, hours</text>
+            <rect x="214" y="190" width="186" height="48" rx="8" class="s-box" />
+            <text x="307" y="211" text-anchor="middle" class="s-t">candidate</text>
+            <text x="307" y="227" text-anchor="middle" class="s-t3">files on disk, not claims</text>
+            <path d="M307 156 V186" class="s-line" marker-end="url(#ah)" />
+            <!-- verifier -->
+            <rect x="462" y="160" width="210" height="78" rx="10" class="s-box" />
+            <text x="476" y="184" class="s-t">3 · verification</text>
+            <text x="476" y="203" class="s-t3">hidden, from frozen files,</text>
+            <text x="476" y="219" class="s-t3">same sample as the best</text>
+            <path d="M400 214 H458" class="s-line" marker-end="url(#ah)" />
+            <!-- reward -->
+            <rect x="462" y="40" width="210" height="78" rx="10" class="s-box" />
+            <text x="476" y="64" class="s-t">2 · reward</text>
+            <text x="476" y="83" class="s-t3">one number for the goal,</text>
+            <text x="476" y="99" class="s-t3">paid only if gates pass</text>
+            <path d="M571 160 V122" class="s-line" marker-end="url(#ah)" />
+            <!-- back to agent -->
+            <path d="M462 80 H446 Q432 80 432 94 V116 Q432 130 418 130 H404" class="s-line s-dash" marker-end="url(#ah)" />
+            <text x="440" y="148" class="s-t3" text-anchor="start">memory</text>
+          </svg>
+        </div>
+        <figcaption><b>Figure 1.</b> Every project follows the same loop. The problem comes first because no loop can rescue a problem
+          without clear feedback. The other three parts decide whether a number the agent produces means anything.</figcaption>
+      </figure>
+
+      <h2><span class="num">0</span>Pick the right problem</h2>
+      <p>
+        Before any harness work, ask two questions about the problem. Can a program tell, without a human, whether a candidate is
+        better? And can the agent try many candidates in the time you have? Systems performance work often answers yes to both: you
+        can run the candidate on a workload and measure it. Audrey Cheng and colleagues make the same argument in
+        <a href="https://arxiv.org/abs/2510.06189">Barbarians at the Gate</a>, calling the approach AI-driven research for systems.
+      </p>
+      <p>
+        The second question is where the hard cases live. A serving system takes minutes to rebuild and a 30-minute replay to judge,
+        so an 8-hour run gets a handful of honest measurements. A compressed 27B checkpoint takes even longer to produce and evaluate.
+        A sparse-attention policy can be checked in minutes, which is why I chose it for the harness: the agent gets dozens of verified
+        attempts per run instead of a few.
+      </p>
+
+      <figure class="fig" id="fig-pick">
+        <div class="frame">
+          <svg viewBox="0 0 680 330" role="img" aria-labelledby="fig2-t fig2-d">
+            <title id="fig2-t">Where problems sit</title>
+            <desc id="fig2-d">An illustrative map with the cost of one verified try on the horizontal axis and how exact the feedback is on the vertical axis. Kernel tuning and sparse-attention policies are cheap and exact. Serving systems and checkpoint compression are exact but slower. Pretraining a new architecture is slow with noisy proxy feedback.</desc>
+            <rect x="80" y="20" width="290" height="130" class="s-hl" style="opacity:1" />
+            <line x1="80" y1="280" x2="660" y2="280" class="s-axis" />
+            <line x1="80" y1="20" x2="80" y2="280" class="s-axis" />
+            <line x1="370" y1="20" x2="370" y2="280" class="s-grid" />
+            <line x1="80" y1="150" x2="660" y2="150" class="s-grid" />
+            <text x="370" y="306" text-anchor="middle" class="s-t3">cost of one verified try →  (minutes … hours … days)</text>
+            <text x="22" y="150" text-anchor="middle" class="s-t3" transform="rotate(-90 22 150)">feedback: proxy / noisy → exact</text>
+            <text x="92" y="40" class="s-acc">sweet spot</text>
+
+            <circle cx="130" cy="62" r="6" class="s-mark--acc" /><text x="142" y="66" class="s-t2">GPU kernel tuning</text>
+            <circle cx="200" cy="96" r="6" class="s-mark--acc" /><text x="212" y="100" class="s-t2">sparse-attention policy</text>
+            <circle cx="430" cy="78" r="6" class="s-mark" /><text x="442" y="82" class="s-t2">serving system (replay)</text>
+            <circle cx="520" cy="120" r="6" class="s-mark" /><text x="532" y="124" class="s-t2">checkpoint compression</text>
+            <circle cx="610" cy="236" r="6" class="s-mark" /><text x="598" y="240" text-anchor="end" class="s-t2">pretraining a new architecture</text>
+            <circle cx="250" cy="250" r="6" class="s-mark" /><text x="262" y="254" class="s-t2">"is this idea novel?"</text>
+          </svg>
+        </div>
+        <figcaption><b>Figure 2.</b> An illustrative map, not a measurement. Problems in the top left give the agent many exact signals per
+          run. Problems to the right still work, but each measurement is precious, so the verifier has to be right the first time.
+          Problems near the bottom need a human in the loop.</figcaption>
+      </figure>
+
+      <h2><span class="num">1</span>Environment: the sandbox and the start point</h2>
+      <p>
+        All three projects run agents in <a href="https://github.com/harbor-framework/harbor">Harbor</a> sandboxes: a container with a GPU,
+        the model weights, the toolchain and nothing else. ServerBench and CompressionBench cut the network once the image is built, so the
+        agent cannot download a finished answer. The harness mounts only what the agent needs; the verifier's thresholds and correctness
+        questions never enter the sandbox.
+      </p>
+      <p>
+        <strong>The start point is part of the environment, and it shapes the search.</strong> ServerBench starts from a correct but naive
+        server, so every gain is the agent's own work and the baseline cannot be gamed. The harness starts from the opposite end: a working
+        sparse-attention runtime with a small policy interface and presets for known methods (Quest, StreamingLLM and others), so the agent
+        spends its hours on design rather than plumbing. A start point too far from the goal wastes the run on boilerplate; one too close
+        leaves nothing to discover.
+      </p>
+
+      <h2><span class="num">2</span>Reward: define the goal as one number</h2>
+      <p>
+        The reward should be what you would actually pay for. In ServerBench it is token value per dollar of GPU cost, counted only for
+        requests that meet the latency targets. A server that is fast but answers wrongly earns nothing, and so does one that is
+        accurate but too slow. In the harness, a candidate is promoted only if it beats the current best by at least 1% on the same sample,
+        with every latency and correctness gate passing.
+      </p>
+      <p>
+        Two details turned out to matter more than I expected. First, <strong>gates must sit outside the measurement noise</strong>: in one
+        8-hour harness run, three of four rejections came from a behaviour gate set at 1.10× when the candidates measured 1.101–1.107×,
+        inside the noise band. Second, <strong>the agent will optimize anything you measure</strong>, including the harness itself. In the
+        same run, the agent kept its session alive by appending "unchanged" lines to its notes, which reset the idle detector; that last hour
+        cost $59 of the run's $68.
+      </p>
+
+      <h2><span class="num">3</span>Verification: grade files, not claims</h2>
+      <p>
+        Nothing the agent reports is graded. In ServerBench, the grader boots the server from the files the agent froze and replays
+        sessions the agent never saw; a run whose frozen tree does not boot gets no verdict at all. CompressionBench runs its hidden verifier exactly once, after the
+        deadline. The harness goes one step further for noisy measurements: the candidate and the current best are measured
+        <strong>in the same verification, on the same hidden sample</strong>, because sample-to-sample variation (±0.05× in that run) is as
+        large as most real improvements.
+      </p>
+      <div class="callout"><p>With these three in place, the harness's first long run was steady: in 8 hours the agent produced 13 verified
+        submissions, promoted 7, and took its policy from 1.63× to 1.98× the end-to-end throughput of dense attention on Qwen3-8B, every
+        step passing hidden latency and correctness gates.</p></div>
+
+      <h2>Two ways strong agents still get stuck</h2>
+      <p>
+        The loop makes results trustworthy. It does not make the search good. Across our runs with DeepSeek, Sonnet and Opus models, two
+        failure modes kept showing up, and they look the same across model families.
+      </p>
+
+      <h3>1 · They settle into a local optimum</h3>
+      <p>
+        On the ServerBench task that serves Qwen3.5-9B, every run of one Opus model built a capable engine (paged KV cache, prefix reuse,
+        CUDA graphs) and then spent its remaining hours refining it. Their p90 time per output token landed between 49.8 and 60 ms. The best
+        DeepSeek run reached 35.8 ms. None crossed the task's 23.5 ms bar by tuning. The one run that did, at 13.1 ms, added a different
+        idea: speculative decoding with the model's own multi-token-prediction heads.
+      </p>
+
+      <figure class="fig" id="fig-tpot">
+        <div class="frame">
+          <svg viewBox="0 0 680 250" role="img" aria-labelledby="fig3-t fig3-d" id="tpot-chart">
+            <title id="fig3-t">p90 time per output token on the ServerBench Qwen3.5-9B task, lower is better</title>
+            <desc id="fig3-d">Opus 5 runs: 49.8 to 60 milliseconds. SGLang baseline: 39.7. Best DeepSeek V4.1 Flash run: 35.8. Opus 5.5 with speculative decoding: 13.1. The task bar is 23.5 milliseconds.</desc>
+            <g class="s-t3">
+              <line x1="230" y1="20" x2="230" y2="210" class="s-axis" />
+              <line x1="320" y1="20" x2="320" y2="210" class="s-grid" />
+              <line x1="410" y1="20" x2="410" y2="210" class="s-grid" />
+              <line x1="500" y1="20" x2="500" y2="210" class="s-grid" />
+              <line x1="590" y1="20" x2="590" y2="210" class="s-grid" />
+              <text x="230" y="228" text-anchor="middle">0</text>
+              <text x="320" y="228" text-anchor="middle">20</text>
+              <text x="410" y="228" text-anchor="middle">40</text>
+              <text x="500" y="228" text-anchor="middle">60</text>
+              <text x="590" y="228" text-anchor="middle">80 ms</text>
+            </g>
+            <!-- bar at 23.5 ms: x = 230 + 23.5*4.5 = 335.75 -->
+            <line x1="335.75" y1="14" x2="335.75" y2="210" class="s-ink s-dash" />
+            <text x="341" y="24" class="s-t3">task bar 23.5 ms</text>
+
+            <g class="s-row" data-tip="Opus 5, 7 runs with logs: p90 TPOT 49.8–60 ms. All refined the same kind of engine.">
+              <rect x="0" y="40" width="680" height="34" class="s-hl" />
+              <text x="220" y="61" text-anchor="end" class="s-t2">Opus 5 · 7 runs</text>
+              <rect x="454.1" y="50" width="45.9" height="14" rx="4" class="s-mark" />
+              <text x="508" y="61" class="s-t3">49.8–60</text>
+              <rect x="0" y="40" width="680" height="34" class="s-hit" />
+            </g>
+            <g class="s-row" data-tip="SGLang baseline: p90 TPOT 39.7 ms.">
+              <rect x="0" y="80" width="680" height="34" class="s-hl" />
+              <text x="220" y="101" text-anchor="end" class="s-t2">SGLang baseline</text>
+              <circle cx="408.65" cy="97" r="6" class="s-mark" />
+              <text x="420" y="101" class="s-t3">39.7</text>
+              <rect x="0" y="80" width="680" height="34" class="s-hit" />
+            </g>
+            <g class="s-row" data-tip="DeepSeek V4.1 Flash, best of 2 runs: p90 TPOT 35.8 ms.">
+              <rect x="0" y="120" width="680" height="34" class="s-hl" />
+              <text x="220" y="141" text-anchor="end" class="s-t2">DeepSeek V4.1 Flash · best</text>
+              <circle cx="391.1" cy="137" r="6" class="s-mark" />
+              <text x="402" y="141" class="s-t3">35.8</text>
+              <rect x="0" y="120" width="680" height="34" class="s-hit" />
+            </g>
+            <g class="s-row" data-tip="Opus 5.5 with MTP speculative decoding: p90 TPOT 13.1 ms (its correctness check was lost to a harness defect).">
+              <rect x="0" y="160" width="680" height="34" class="s-hl" />
+              <text x="220" y="181" text-anchor="end" class="s-t">Opus 5.5 · + speculation</text>
+              <circle cx="288.95" cy="177" r="7" class="s-mark--acc" />
+              <text x="278" y="181" text-anchor="end" class="s-acc">13.1</text>
+              <rect x="0" y="160" width="680" height="34" class="s-hit" />
+            </g>
+          </svg>
+        </div>
+        <figcaption><b>Figure 3.</b> p90 time per output token on the ServerBench Qwen3.5-9B task (lower is better). Refining one design
+          plateaued well above the bar; only a change of approach crossed it. The Opus 5.5 run's correctness check was lost to a harness
+          defect, so its result is reported but not scored.</figcaption>
+        <details class="data"><summary>data table</summary>
+          <table>
+            <tr><th>agent</th><th>p90 TPOT (ms)</th></tr>
+            <tr><td>Opus 5, 7 runs with logs</td><td>49.8–60</td></tr>
+            <tr><td>SGLang baseline</td><td>39.7</td></tr>
+            <tr><td>DeepSeek V4.1 Flash, best of 2</td><td>35.8</td></tr>
+            <tr><td>Opus 5.5 with speculative decoding</td><td>13.1</td></tr>
+            <tr><td>task bar</td><td>23.5</td></tr>
+          </table>
+        </details>
+      </figure>
+
+      <p>
+        The harness shows the same shape on a smaller scale: most of its promotions were 1–3% steps on the same policy. Small verified
+        gains are easy to find, so the agent keeps finding them.
+      </p>
+
+      <h3>2 · They commit to one idea and never leave it</h3>
+      <p>
+        The second failure is earlier and more costly: the agent picks a path in the first hour and treats it as fixed. Both Sonnet 5 runs on
+        the Gemma-4 task kept the stock Hugging Face forward pass and tuned around it. One of them measured its time per token at
+        204–224 ms in eight of its own replays and changed nothing about the design that caused it. The runs that met the latency bar on that
+        task had all written their own engine. A DeepSeek run on the 9B task saw its server emit doubled tokens and called them
+        "an artifact I've seen all along" instead of questioning the path that produced them.
+      </p>
+
+      <figure class="fig" id="fig-path">
+        <div class="frame">
+          <svg viewBox="0 0 680 200" role="img" aria-labelledby="fig4-t fig4-d">
+            <title id="fig4-t">One Sonnet 5 run's design path on the Gemma-4 E4B task</title>
+            <desc id="fig4-d">The run started on the Hugging Face forward pass, added a static cache and CUDA graphs for short prompts, then replayed eight times at 204 to 224 milliseconds per token without changing the design. The branch it never took, writing its own engine, is what the runs that met the bar did.</desc>
+            <defs>
+              <marker id="ah4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="s-arrow" /></marker>
+              <marker id="ah4a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="s-arrow--acc" /></marker>
+            </defs>
+            <rect x="10" y="40" width="140" height="50" rx="8" class="s-box" />
+            <text x="80" y="62" text-anchor="middle" class="s-t">HF forward pass</text>
+            <text x="80" y="78" text-anchor="middle" class="s-t3">start</text>
+            <path d="M150 65 H182" class="s-line" marker-end="url(#ah4)" />
+            <rect x="186" y="40" width="190" height="50" rx="8" class="s-box" />
+            <text x="281" y="62" text-anchor="middle" class="s-t">cache + CUDA graphs</text>
+            <text x="281" y="78" text-anchor="middle" class="s-t3">graphs for short prompts only</text>
+            <path d="M376 65 H406" class="s-line" marker-end="url(#ah4)" />
+            <rect x="410" y="40" width="160" height="50" rx="8" class="s-box" />
+            <text x="490" y="62" text-anchor="middle" class="s-t">replay × 8</text>
+            <text x="490" y="78" text-anchor="middle" class="s-t3">204–224 ms per token</text>
+            <path d="M535 40 C 555 6, 445 6, 460 38" class="s-line" marker-end="url(#ah4)" />
+            <text x="566" y="22" class="s-t3">same design</text>
+            <path d="M80 90 V153 H182" class="s-line s-line--acc s-dash" marker-end="url(#ah4a)" />
+            <rect x="186" y="128" width="384" height="50" rx="8" class="s-box s-box--acc" style="stroke-dasharray:4 4" />
+            <text x="378" y="150" text-anchor="middle" class="s-acc">never tried: write its own engine</text>
+            <text x="378" y="166" text-anchor="middle" class="s-t3">what every run that met the latency bar did</text>
+          </svg>
+        </div>
+        <figcaption><b>Figure 4.</b> One Sonnet 5 run on the ServerBench Gemma-4 E4B task. The agent kept measuring the same design and
+          never went back to the decision that capped it.</figcaption>
+      </figure>
+
+      <p>
+        Across families the pattern is the same: <strong>each model made recognisably the same design decisions run after run</strong>, and
+        those decisions predicted its result better than run-to-run noise did. More hours do not fix this, because the agent spends the extra
+        hours on the path it already chose.
+      </p>
+
+      <h2>What I'm trying next</h2>
+      <p>
+        Both failures are search problems, so the fixes go into the harness rather than the prompt. Three things are in progress:
+      </p>
+      <ul class="list">
+        <li><strong>Separate ideas from tuning.</strong> In the two-agent version of the harness, one agent decides what to attend to and the
+          other makes it fast, and they trade requests on a shared board. Four of those requests turned into design changes, such as making
+          every layer sparse.</li>
+        <li><strong>Make the memory remember paths, not just scores.</strong> A structured record of what was tried, and why it stalled, gives
+          the next attempt a reason to try something else.</li>
+        <li><strong>Let the harness revise its own workflow.</strong> Between phases, a meta-optimizer rewrites how the agents work; in one run
+          it revised the workflow three times, and the kept revision produced the final best design within 7 minutes.</li>
+      </ul>
+      <p>
+        None of this solves the problem yet. But it changes where I spend my time: less on prompting agents, more on choosing problems with
+        honest feedback and on building loops that push agents off the path they would otherwise never leave.
+      </p>
+
+      <div class="endnote">
+        <p>
+          ServerBench, CompressionBench and the sparse-attention harness are joint work with my collaborators at CMU's InfiniAI Lab, led by
+          Prof. Beidi Chen. Numbers come from our run reports: the ServerBench analysis of past runs on the Qwen3.5-9B and Gemma-4 E4B tasks
+          (Oct 2026), and the harness reports of Oct 13 and Oct 16, 2026. Model names are those of the runs.
+          Code: <a href="https://github.com/Infini-AI-Lab/Server-Bench">ServerBench</a> ·
+          <a href="https://github.com/Infini-AI-Lab/Compression-Bench">CompressionBench</a>.
+        </p>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <span>© <span id="year">2026</span> Xinrui Zhong · Pittsburgh, PA</span>
+      <span class="footer__fig">FIG. ∞: v(n+1) &gt; v(n)</span>
+      <a href="#top">back to the top ↑</a>
+    </div>
+  </footer>
+
+  <div class="tip" id="tip" role="tooltip"></div>
+  <script src="../assets/js/main.js" defer></script>
+  <script>
+    (function () {
+      var tip = document.getElementById("tip");
+      document.querySelectorAll("[data-tip]").forEach(function (g) {
+        g.addEventListener("mousemove", function (e) {
+          tip.textContent = g.getAttribute("data-tip");
+          tip.style.left = Math.min(e.clientX + 14, window.innerWidth - 270) + "px";
+          tip.style.top = (e.clientY + 14) + "px";
+          tip.classList.add("on");
+        });
+        g.addEventListener("mouseleave", function () { tip.classList.remove("on"); });
+      });
+    })();
+  </script>
+</body>
+</html>
